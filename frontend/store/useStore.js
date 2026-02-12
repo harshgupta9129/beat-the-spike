@@ -8,6 +8,7 @@ export const useStore = create(
         (set, get) => ({
             profile: {
                 name: '',
+                username: '', // Added username
                 age: 22,
                 gender: '',
                 height: 170,
@@ -31,6 +32,58 @@ export const useStore = create(
                 return parseFloat((w / (heightMeters * heightMeters)).toFixed(1));
             },
 
+            login: async (username) => {
+                set({ loading: true });
+                try {
+                    const res = await fetch(`${API_URL}/api/users/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username })
+                    });
+
+                    if (res.ok) {
+                        const user = await res.json();
+                        // Load user data and history
+                        set(state => ({
+                            profile: { ...state.profile, ...user, mongoId: user._id, onboarded: true }
+                        }));
+                        await get().initializeData(); // Fetch history
+                        return true; // Login success
+                    } else if (res.status === 404) {
+                        set({ loading: false });
+                        return false; // User not found
+                    }
+                } catch (error) {
+                    console.error("Login Error:", error);
+                    set({ loading: false });
+                    throw error;
+                }
+            },
+
+            logout: () => {
+                set({
+                    profile: {
+                        name: '',
+                        username: '',
+                        age: 22,
+                        gender: '',
+                        height: 170,
+                        weight: 70,
+                        bmi: 24.2,
+                        dailyLimit: 30,
+                        onboarded: false,
+                        avatar: '👤',
+                        activity: { steps: 4500, sleepHours: 7 },
+                        anonymousID: null,
+                        mongoId: null
+                    },
+                    history: [],
+                    totalToday: 0,
+                    streak: 0
+                });
+                localStorage.removeItem('sugar_warrior_storage'); // Clear persisted state
+            },
+
             setProfile: async (updates) => {
                 const currentProfile = get().profile;
                 let newProfile = { ...currentProfile, ...updates };
@@ -52,7 +105,7 @@ export const useStore = create(
                             body: JSON.stringify(updates)
                         });
                     } else if (updates.onboarded) {
-                        // Create new user
+                        // Create new user (Register)
                         const anonymousID = Math.random().toString(36).substr(2, 9);
                         const res = await fetch(`${API_URL}/api/users`, {
                             method: 'POST',
@@ -140,24 +193,7 @@ export const useStore = create(
                     } else if (userRes.status === 404) {
                         // Self-healing: Backend doesn't know this user (likely deleted). Reset local state.
                         console.warn("User ID invalid (404). Resetting profile.");
-                        set({
-                            profile: {
-                                name: '',
-                                age: 22,
-                                gender: '',
-                                height: 170,
-                                weight: 70,
-                                bmi: 24.2,
-                                dailyLimit: 30,
-                                onboarded: false,
-                                avatar: '👤',
-                                activity: { steps: 4500, sleepHours: 7 },
-                                anonymousID: null,
-                                mongoId: null
-                            },
-                            history: [],
-                            totalToday: 0
-                        });
+                        get().logout(); // Use logout to reset
                     }
                 } catch (e) { console.error("Init Error", e); }
                 finally { set({ loading: false }); }

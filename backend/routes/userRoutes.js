@@ -4,17 +4,38 @@ import User from '../models/User.js';
 
 const router = express.Router();
 
-// Create a new user
+// Create a new user (Register)
 router.post('/', async (req, res) => {
     try {
-        const { anonymousID, age, bmi, name, gender, height, weight, dailyLimit, avatar, activity, onboarded } = req.body;
+        const { anonymousID, username, age, bmi, name, gender, height, weight, dailyLimit, avatar, activity, onboarded } = req.body;
+
+        // Check if username exists
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Username already taken' });
+        }
+
         const user = new User({
-            anonymousID, age, bmi, name, gender, height, weight, dailyLimit, avatar, activity, onboarded
+            anonymousID, username, age, bmi, name, gender, height, weight, dailyLimit, avatar, activity, onboarded
         });
         await user.save();
         res.status(201).json(user);
     } catch (error) {
         res.status(400).json({ message: error.message });
+    }
+});
+
+// Login by Username
+router.post('/login', async (req, res) => {
+    try {
+        const { username } = req.body;
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 });
 

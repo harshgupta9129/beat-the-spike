@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
     anonymousID: { type: String, required: true, unique: true },
+    username: { type: String, required: true, unique: true },
     name: { type: String, default: '' },
     gender: { type: String, default: '' },
     age: { type: Number, required: true },

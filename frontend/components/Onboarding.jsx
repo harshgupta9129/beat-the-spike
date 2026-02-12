@@ -53,14 +53,64 @@ const RulerInput = ({ min, max, value, onChange, label, unit }) => {
 
 export const Onboarding = () => {
     const [step, setStep] = useState(0);
-    const { profile, setProfile } = useStore();
+    const { profile, setProfile, login } = useStore();
+    const [usernameInput, setUsernameInput] = useState('');
+    const [isChecking, setIsChecking] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleUsernameSubmit = async () => {
+        if (!usernameInput.trim()) return;
+        setIsChecking(true);
+        setError('');
+        try {
+            const success = await login(usernameInput);
+            if (success) {
+                // Login successful, Onboarding will unmount
+            } else {
+                // User not found, proceed to registration
+                setProfile({ username: usernameInput });
+                setStep(s => s + 1);
+            }
+        } catch (err) {
+            setError('Something went wrong. Try again.');
+        } finally {
+            setIsChecking(false);
+        }
+    };
 
     const avatars = ['🥗', '🏃', '🧠', '⚡', '🛡️', '🍬'];
 
     const steps = [
         {
+            title: "Welcome Warrior",
+            description: "Enter your username to login or start a new quest.",
+            icon: <User className="w-12 h-12 text-emerald-400" />,
+            content: (
+                <div className="space-y-6">
+                    <input
+                        type="text"
+                        placeholder="Username"
+                        value={usernameInput}
+                        onChange={(e) => setUsernameInput(e.target.value)}
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-xl focus:ring-2 focus:ring-emerald-400 outline-none transition-all text-center font-bold"
+                        onKeyDown={(e) => e.key === 'Enter' && handleUsernameSubmit()}
+                    />
+                    {error && <p className="text-red-400 text-sm text-center font-bold">{error}</p>}
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleUsernameSubmit}
+                        disabled={isChecking || !usernameInput.trim()}
+                        className="w-full bg-emerald-500 text-white p-4 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isChecking ? 'Checking...' : 'Continue'}
+                    </motion.button>
+                </div>
+            )
+        },
+        {
             title: "Warrior Identity",
-            description: "Choose your avatar and name to start your sugar-free quest.",
+            description: "Choose your avatar and display name.",
             icon: <User className="w-12 h-12 text-yellow-400" />,
             content: (
                 <div className="space-y-8">
@@ -79,7 +129,7 @@ export const Onboarding = () => {
                     </div>
                     <input
                         type="text"
-                        placeholder="Warrior Name..."
+                        placeholder="Display Name..."
                         value={profile.name}
                         className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-xl focus:ring-2 focus:ring-yellow-400 outline-none transition-all"
                         onChange={(e) => setProfile({ name: e.target.value })}
@@ -176,26 +226,28 @@ export const Onboarding = () => {
                         {steps[step].content}
                     </div>
 
-                    <div className="mt-12 flex justify-between items-center">
-                        <motion.button
-                            disabled={step === 0}
-                            whileHover={{ x: -4 }}
-                            onClick={() => setStep(s => s - 1)}
-                            className="text-zinc-500 font-bold disabled:opacity-0 transition-opacity"
-                        >
-                            Back
-                        </motion.button>
-                        <motion.button
-                            whileHover={{ scale: 1.05, x: 4 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={next}
-                            disabled={step === 0 && !profile.name.trim()}
-                            className="bg-white text-black px-8 py-4 rounded-[24px] font-black flex items-center gap-2 shadow-[0_10px_20px_rgba(255,255,255,0.1)] transition-all disabled:opacity-50"
-                        >
-                            {step === steps.length - 1 ? "Start Quest" : "Continue"}
-                            <ArrowRight className="w-5 h-5" />
-                        </motion.button>
-                    </div>
+                    {step > 0 && (
+                        <div className="mt-12 flex justify-between items-center">
+                            <motion.button
+                                disabled={step === 1}
+                                whileHover={{ x: -4 }}
+                                onClick={() => setStep(s => s - 1)}
+                                className="text-zinc-500 font-bold disabled:opacity-0 transition-opacity"
+                            >
+                                Back
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.05, x: 4 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={next}
+                                disabled={step === 1 && !profile.name.trim()}
+                                className="bg-white text-black px-8 py-4 rounded-[24px] font-black flex items-center gap-2 shadow-[0_10px_20px_rgba(255,255,255,0.1)] transition-all disabled:opacity-50"
+                            >
+                                {step === steps.length - 1 ? "Start Quest" : "Continue"}
+                                <ArrowRight className="w-5 h-5" />
+                            </motion.button>
+                        </div>
+                    )}
                 </motion.div>
             </AnimatePresence>
         </div>

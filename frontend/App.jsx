@@ -23,7 +23,8 @@ import {
     ChevronDown,
     ChevronUp,
     Sparkles,
-    Wind
+    Wind,
+    LogOut
 } from 'lucide-react';
 import {
     AreaChart,
@@ -32,7 +33,7 @@ import {
 } from 'recharts';
 
 const App = () => {
-    const { profile, history, totalToday, streak, removeEntry, addEntry, resetProgress, initializeData } = useStore();
+    const { profile, history, totalToday, streak, removeEntry, addEntry, resetProgress, initializeData, logout } = useStore();
     const [mounted, setMounted] = useState(false);
     const [insightOpen, setInsightOpen] = useState(false);
 
@@ -106,14 +107,24 @@ const App = () => {
                         <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] mt-1.5">{profile.name} • XP 1,240</p>
                     </div>
                 </div>
-                <motion.button
-                    whileHover={{ scale: 1.1, rotate: -10 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={resetProgress}
-                    className="p-4 glass rounded-[20px] hover:bg-white/10 transition-colors border border-white/10"
-                >
-                    <History className="w-6 h-6 text-zinc-400" />
-                </motion.button>
+                <div className="flex gap-2">
+                    <motion.button
+                        whileHover={{ scale: 1.1, rotate: -10 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={resetProgress}
+                        className="p-4 glass rounded-[20px] hover:bg-white/10 transition-colors border border-white/10"
+                    >
+                        <History className="w-6 h-6 text-zinc-400" />
+                    </motion.button>
+                    <motion.button
+                        whileHover={{ scale: 1.1, rotate: 10 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={logout}
+                        className="p-4 glass rounded-[20px] hover:bg-red-500/10 transition-colors border border-white/10 group"
+                    >
+                        <LogOut className="w-6 h-6 text-zinc-400 group-hover:text-red-500 transition-colors" />
+                    </motion.button>
+                </div>
             </motion.nav>
 
             <BentoGrid>
