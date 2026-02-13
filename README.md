@@ -1,6 +1,6 @@
 # ⚡ Beat The Spike - Master Your Metabolic Health
 
-![Project Banner](https://ibb.co/YFDxmDxm)
+![Project Banner](https://raw.githubusercontent.com/harshgupta9129/spring/main/banner.jpg)
 
 > **"What gets measured, gets managed."** 
 > Beat The Spike is a gamified metabolic health tracker that helps users visualize their glucose spikes, understand their body's response to food, and take corrective actions in real-time.
