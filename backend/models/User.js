@@ -17,7 +17,9 @@ const userSchema = new mongoose.Schema({
         steps: { type: Number, default: 4500 },
         sleepHours: { type: Number, default: 7 }
     },
-    currentStreak: { type: Number, default: 0 }
+    currentStreak: { type: Number, default: 0 },
+    points: { type: Number, default: 0 },
+    lastLogDate: { type: Date, default: null }
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);

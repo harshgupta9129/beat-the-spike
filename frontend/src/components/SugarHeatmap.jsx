@@ -7,28 +7,44 @@ import { motion } from 'framer-motion';
 
 const SugarHeatmap = ({ userId }) => {
     const [data, setData] = useState([]);
+    const API_URL = import.meta.env.VITE_API_URL || '';
 
     useEffect(() => {
         if (userId) {
-            // Mock fetching or use store in real app, but component is requested to use MongoDB
-            // For now we simulate the grid data with mock + live data
-            // In a real implementation: fetch(`/api/sugar-events/${userId}`)
-            // Here we will generate a year's worth of empty data and fill with some "events"
-            const generateData = () => {
-                const days = [];
-                const today = new Date();
-                for (let i = 0; i < 365; i++) {
-                    const date = new Date(today);
-                    date.setDate(date.getDate() - i);
-                    days.push({
-                        date: date.toISOString().split('T')[0],
-                        count: Math.floor(Math.random() * 5), // Mock intensity
-                        intensity: Math.random() > 0.8 ? 'high' : Math.random() > 0.5 ? 'medium' : 'low'
-                    });
+            const fetchHeatmapData = async () => {
+                try {
+                    const res = await fetch(`${API_URL}/api/sugar-events/${userId}`);
+                    if (res.ok) {
+                        const events = await res.json();
+
+                        // Process events into daily aggregate
+                        const dateMap = {};
+                        events.forEach(event => {
+                            const date = new Date(event.timestamp).toISOString().split('T')[0];
+                            if (!dateMap[date]) dateMap[date] = 0;
+                            dateMap[date] += event.sugarGrams;
+                        });
+
+                        // Generate last 365 days
+                        const days = [];
+                        const today = new Date();
+                        for (let i = 0; i < 365; i++) {
+                            const d = new Date(today);
+                            d.setDate(d.getDate() - i);
+                            const dateStr = d.toISOString().split('T')[0];
+                            days.push({
+                                date: dateStr,
+                                count: dateMap[dateStr] ? Math.min(Math.floor(dateMap[dateStr] / 10), 4) : 0, // Normalize for color intensity (0-4)
+                                rawGrams: dateMap[dateStr] || 0
+                            });
+                        }
+                        setData(days.reverse());
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch heatmap data", error);
                 }
-                return days.reverse();
             };
-            setData(generateData());
+            fetchHeatmapData();
         }
     }, [userId]);
 

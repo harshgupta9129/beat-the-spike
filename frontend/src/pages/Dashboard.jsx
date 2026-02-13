@@ -15,7 +15,7 @@ import {
 import { AreaChart, Area, ResponsiveContainer, YAxis, XAxis } from 'recharts';
 
 const Dashboard = () => {
-    const { profile, history, totalToday, streak, removeEntry, addEntry, initializeData } = useStore();
+    const { profile, history, totalToday, streak, removeEntry, addEntry, initializeData, notification, clearNotification } = useStore();
     const [mounted, setMounted] = useState(false);
     const [insightOpen, setInsightOpen] = useState(false);
 
@@ -87,8 +87,34 @@ const Dashboard = () => {
                             <span className="text-2xl font-black text-white">{streak}</span>
                         </div>
                         <p className="text-zinc-500 text-[9px] font-black uppercase tracking-widest mt-2 text-right">Day Consistency</p>
+
+                        {/* Updated Points Display */}
+                        <div className="mt-4 flex items-center gap-2">
+                            <span className="text-xl font-black text-purple-400">{profile.points || 0}</span>
+                            <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">XP Earned</span>
+                        </div>
                     </div>
                 </BentoItem>
+
+                {/* --- GAMIFICATION TOAST --- */}
+                <AnimatePresence>
+                    {notification && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -50, x: '-50%' }}
+                            animate={{ opacity: 1, y: 0, x: '-50%' }}
+                            exit={{ opacity: 0, y: -50, x: '-50%' }}
+                            className="fixed top-20 left-1/2 z-50 bg-zinc-900/90 backdrop-blur-md border border-yellow-400/30 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4"
+                        >
+                            <div className="bg-yellow-400/20 p-2 rounded-full">
+                                <Trophy className="w-6 h-6 text-yellow-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black text-white">+{notification.points} XP</h3>
+                                <p className="text-xs text-zinc-400 font-bold uppercase tracking-wider">{notification.messages.join(' • ')}</p>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* --- 2. QUICK LOGGING --- */}
                 <BentoItem className="md:col-span-1 p-6 flex flex-col justify-center">

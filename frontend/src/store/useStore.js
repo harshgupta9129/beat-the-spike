@@ -19,12 +19,17 @@ export const useStore = create(
                 avatar: '👤',
                 activity: { steps: 4500, sleepHours: 7 },
                 anonymousID: null,
-                mongoId: null
+                anonymousID: null,
+                mongoId: null,
+                points: 0 // Added points
             },
             history: [],
             totalToday: 0,
             streak: 3,
+            totalToday: 0,
+            streak: 3,
             loading: false,
+            notification: null, // Global notification for gamification
 
             // HELPER: Calculate BMI locally
             _calcBMI: (w, h) => {
@@ -137,12 +142,12 @@ export const useStore = create(
                 const { profile } = get();
                 if (profile.mongoId) {
                     try {
-                        await fetch(`${API_URL}/api/sugar-events`, {
+                        const res = await fetch(`${API_URL}/api/sugar-events`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 userId: profile.mongoId,
-                                foodName: entry.foodName, // Match backend expectation (it maps this to itemName)
+                                foodName: entry.foodName,
                                 sugarGrams: entry.sugarGrams,
                                 calories: entry.calories,
                                 category: entry.category,
@@ -150,9 +155,36 @@ export const useStore = create(
                                 timestamp: entry.timestamp
                             })
                         });
+
+                        if (res.ok) {
+                            const data = await res.json();
+
+                            // Update State with new points and streak
+                            set(state => ({
+                                streak: data.streak || state.streak, // Update streak
+                                profile: {
+                                    ...state.profile,
+                                    points: (state.profile.points || 0) + (data.pointsEarned || 0)
+                                },
+                                notification: data.pointsEarned > 0 ? {
+                                    points: data.pointsEarned,
+                                    messages: data.pointsMessages
+                                } : null
+                            }));
+
+                            // Auto-clear notification after 4 seconds
+                            if (data.pointsEarned > 0) {
+                                setTimeout(() => set({ notification: null }), 4000);
+                            }
+
+                            return { pointsEarned: data.pointsEarned, messages: data.pointsMessages };
+                        }
                     } catch (e) { console.error("Event Sync Failed", e); }
                 }
+                return null;
             },
+
+            clearNotification: () => set({ notification: null }),
 
             removeEntry: (id) => set((state) => {
                 const newHistory = state.history.filter(e => e.id !== id);
