@@ -1,11 +1,53 @@
-
 # ⚡ Beat The Spike - Master Your Metabolic Health
 
-![Project Banner](https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80) 
-*(Replace with your actual project screenshot or banner)*
+![Project Banner](https://ibb.co/YFDxmDxm)
 
 > **"What gets measured, gets managed."** 
 > Beat The Spike is a gamified metabolic health tracker that helps users visualize their glucose spikes, understand their body's response to food, and take corrective actions in real-time.
+
+---
+
+
+## 💻 Tech Stack
+
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)
+![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB)
+![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
+
+---
+
+## 🔧 Installation & Setup
+
+1.  **Clone the repository**
+    ```bash
+    git clone https://github.com/ArunIsharwal/Mcode.git
+    cd Mcode
+    ```
+
+2.  **Setup Backend**
+    ```bash
+    cd backend
+    npm install
+    # Create a .env file with:
+    # MONGODB_URI=mongodb+srv://rockstar221405_db_user:1S2bTC2jBVuwcywg@cluster0.wwjfoeq.mongodb.net/sugar?appName=Cluster0
+    # PORT=5000
+    npm run start
+    ```
+
+3.  **Setup Frontend**
+    ```bash
+    cd frontend
+    npm install
+    # Create a .env.local file with:
+    # VITE_API_URL=http://localhost:5000
+    npm run dev
+    ```
+
+4.  **Open in Browser**
+    Visit `http://localhost:3000/` to start crusing spikes!
 
 ---
 
@@ -69,47 +111,6 @@ We chose a modern **MERN Stack** (MongoDB, Express, React, Node.js) turbocharged
 *   **Computer Vision Logging**: Snap a photo of your food, and AI identifies the sugar content automatically.
 *   **Social Squads**: Team up with friends to keep the collective "Squad Score" high.
 *   **PWA Support**: Making it installable as a native app on iOS and Android.
-
----
-
-## 💻 Tech Stack
-
-![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
-![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
-![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)
-![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB)
-![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
-
----
-
-## 🔧 Installation & Setup
-
-1.  **Clone the repository**
-    ```bash
-    git clone https://github.com/yourusername/beat-the-sugar-spike.git
-    cd beat-the-sugar-spike
-    ```
-
-2.  **Setup Backend**
-    ```bash
-    cd backend
-    npm install
-    # Create a .env file with:
-    # MONGODB_URI=your_mongodb_connection_string
-    # PORT=5000
-    npm start
-    ```
-
-3.  **Setup Frontend**
-    ```bash
-    cd frontend
-    npm install
-    npm run dev
-    ```
-
-4.  **Open in Browser**
-    Visit `http://localhost:5173` to start crusing spikes!
 
 ---
 *Built with ❤️ by The Bug Smashers.*
