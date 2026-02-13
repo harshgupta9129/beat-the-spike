@@ -93,39 +93,57 @@ export const useStore = create(
                 const currentProfile = get().profile;
                 let newProfile = { ...currentProfile, ...updates };
 
-                // Auto-calculate BMI if vitals changed
                 if (updates.height || updates.weight) {
                     newProfile.bmi = get()._calcBMI(newProfile.weight, newProfile.height);
                 }
-
-                // Optimistic UI Update
                 set({ profile: newProfile });
 
+                // Backend Sync (Update Only)
                 try {
                     if (newProfile.anonymousID) {
-                        // Update existing user
                         await fetch(`${API_URL}/api/users/${newProfile.anonymousID}`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(updates)
                         });
-                    } else if (updates.onboarded) {
-                        // Create new user (Register)
-                        const anonymousID = Math.random().toString(36).substr(2, 9);
-                        const res = await fetch(`${API_URL}/api/users`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ ...newProfile, anonymousID })
-                        });
-                        if (res.ok) {
-                            const user = await res.json();
-                            set({ profile: { ...newProfile, anonymousID: user.anonymousID, mongoId: user._id } });
-                        }
                     }
                 } catch (error) {
                     console.error("Sync Error:", error);
                 }
             },
+
+            register: async () => {
+                set({ loading: true });
+                const { profile } = get();
+                try {
+                    const res = await fetch(`${API_URL}/api/users`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            ...profile,
+                            onboarded: true, // Ensure backend knows they are ready
+                            anonymousID: profile.anonymousID || Math.random().toString(36).substr(2, 9)
+                        })
+                    });
+
+                    if (res.ok) {
+                        const user = await res.json();
+                        set(state => ({
+                            profile: { ...state.profile, ...user, mongoId: user._id, onboarded: true },
+                            loading: false
+                        }));
+                        return true;
+                    } else {
+                        throw new Error('Registration failed');
+                    }
+                } catch (error) {
+                    console.error("Registration Error:", error);
+                    set({ loading: false });
+                    return false;
+                }
+            },
+
+
 
             addEntry: async (entry) => {
                 // Optimistic Update

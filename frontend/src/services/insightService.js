@@ -5,29 +5,118 @@ export const generateInsight = (profile, history) => {
     const todayEntries = history.filter(e => new Date(e.timestamp).toDateString() === now.toDateString());
     const totalGrams = todayEntries.reduce((acc, curr) => acc + curr.sugarGrams, 0);
 
+    // --- Corrective Action Logic ---
+    let recommendation = null;
+    const percentage = (totalGrams / profile.dailyLimit) * 100;
+
+    const getRandomMessage = (type) => {
+        const messages = {
+            walk: [
+                "Move now to burn excess glucose.",
+                "Walking helps muscles absorb sugar.",
+                " a 10-minute stroll lowers the spike.",
+                "Active muscles = Better insulin sensitivity."
+            ],
+            water: [
+                "Water aids metabolic recovery.",
+                "Hydration helps flush out toxins.",
+                "Drink up to reduce sugar cravings.",
+                "Water boosts your metabolism."
+            ],
+            protein: [
+                "Protein stabilizes blood sugar levels.",
+                "Swap carbs for protein to crash less.",
+                "Protein keeps you fuller for longer.",
+                "Balance the spike with some protein."
+            ]
+        };
+        const list = messages[type] || ["Take action now."];
+        return list[Math.floor(Math.random() * list.length)];
+    };
+
+    // --- Context Awareness & Recency Check ---
+    const recentLogs = history.filter(e => {
+        const timeDiff = (now - new Date(e.timestamp)) / 1000 / 60; // minutes
+        return timeDiff < 60; // Look at last hour
+    });
+
+    const hasRecentWalk = recentLogs.some(e => e.foodName.toLowerCase().includes('walk') || e.category === 'exercise');
+    const hasRecentWater = recentLogs.some(e => e.foodName.toLowerCase().includes('water') || e.category === 'hydration');
+    const hasRecentProtein = recentLogs.some(e => e.foodName.toLowerCase().includes('protein') || e.category === 'nutrition');
+
+    // 1. Critical Spike (>100%) -> Immediate Movement
+    if (percentage > 100 && !hasRecentWalk) {
+        recommendation = {
+            action: "10-minute walk",
+            type: "activity",
+            icon: "Walk",
+            reason: `Critical spike! ${getRandomMessage('walk')}`
+        };
+    }
+    // 2. High Sugar + Low Activity -> Walk
+    else if (percentage > 80 && profile.activity.steps < 5000 && !hasRecentWalk) {
+        recommendation = {
+            action: "10-minute walk",
+            type: "activity",
+            icon: "Walk",
+            reason: `Low activity detected. ${getRandomMessage('walk')}`
+        };
+    }
+    // 3. High Sugar + Poor Sleep -> Water
+    else if (percentage > 50 && profile.activity.sleepHours < 6 && !hasRecentWater) {
+        recommendation = {
+            action: "Drink water",
+            type: "hydration",
+            icon: "Droplet",
+            reason: `Poor sleep detected. ${getRandomMessage('water')}`
+        };
+    }
+    // 4. Moderate Sugar + Older Age -> Protein
+    else if (percentage > 60 && profile.age > 45 && !hasRecentProtein) {
+        recommendation = {
+            action: "Protein snack swap",
+            type: "nutrition",
+            icon: "Cookie",
+            reason: `Age factor detected. ${getRandomMessage('protein')}`
+        };
+    }
+
+    // Default Fallback: If high sugar but 'Walk' already done, suggest Water
+    if (!recommendation && percentage > 80) {
+        if (!hasRecentWalk) {
+            recommendation = {
+                action: "10-minute walk",
+                type: "activity",
+                icon: "Walk",
+                reason: "High sugar intake detected. A short walk is the best remedy."
+            };
+        } else if (!hasRecentWater) {
+            recommendation = {
+                action: "Drink water",
+                type: "hydration",
+                icon: "Droplet",
+                reason: "Keep flushing out the excess sugar."
+            };
+        }
+    }
+
+    let insightText = "Sugar levels optimized. Metabolism in 'Burn Mode'.";
+    let insightWhy = "Keeping sugar low prioritizes burning fat for energy.";
+
     if (isNight && profile.activity.sleepHours < 7 && totalGrams > 5) {
-        return {
-            text: "Sugar late at night after poor sleep will spike your cortisol.",
-            why: "Cortisol is your stress hormone. High levels at night disrupt your metabolic recovery and deep sleep cycles, making you hungrier tomorrow."
-        };
-    }
-
-    if (profile.bmi > 25 && totalGrams > profile.dailyLimit * 0.5) {
-        return {
-            text: "Neutralize the spike! Take a 10-minute walk now.",
-            why: "Post-meal walking helps muscle cells absorb glucose from your bloodstream without needing extra insulin, effectively lowering the 'spike'."
-        };
-    }
-
-    if (profile.activity.steps < 3000) {
-        return {
-            text: "Sedentary alert: Your body is in 'Storage Mode'.",
-            why: "Low activity reduces insulin sensitivity. Any sugar consumed now is more likely to be stored as fat rather than used for energy."
-        };
+        insightText = "Late sugar + poor sleep = cortisol spike.";
+        insightWhy = "High cortisol at night disrupts deep sleep and recovery.";
+    } else if (profile.bmi > 25 && totalGrams > profile.dailyLimit * 0.5) {
+        insightText = "Neutralize the spike! Move now.";
+        insightWhy = "Walking helps muscles absorb glucose without extra insulin.";
+    } else if (profile.activity.steps < 3000) {
+        insightText = "Sedentary alert: Body in 'Storage Mode'.";
+        insightWhy = "Low activity reduces insulin sensitivity.";
     }
 
     return {
-        text: "Sugar levels optimized. Your metabolism is in 'Burn Mode'.",
-        why: "By keeping sugar low and activity consistent, your body prioritizes burning stored fat for energy instead of riding the glucose roller coaster."
+        text: insightText,
+        why: insightWhy,
+        recommendation
     };
 };

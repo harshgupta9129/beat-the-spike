@@ -10,14 +10,50 @@ import GlobalPulse from '../components/GlobalPulse';
 import { generateInsight } from '../services/insightService';
 import {
     Activity, Flame, History, Trophy, Zap, Trash2, Droplet,
-    Coffee, Cookie, Apple, ChevronDown, ChevronUp, Sparkles, Wind
+    Coffee, Cookie, Apple, ChevronDown, ChevronUp, Sparkles, Wind, X
 } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer, YAxis, XAxis } from 'recharts';
 
 const Dashboard = () => {
     const { profile, history, totalToday, streak, removeEntry, addEntry, initializeData, notification, clearNotification } = useStore();
     const [mounted, setMounted] = useState(false);
-    const [insightOpen, setInsightOpen] = useState(false);
+
+    // Suggestion Timer State
+    const [timerActive, setTimerActive] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(600); // 10 minutes default
+
+    useEffect(() => {
+        let interval;
+        if (timerActive && timeLeft > 0) {
+            interval = setInterval(() => setTimeLeft((t) => t - 1), 1000);
+        } else if (timerActive && timeLeft === 0) {
+            completeAction('Walk');
+        }
+        return () => clearInterval(interval);
+    }, [timerActive, timeLeft]);
+
+    const completeAction = (type) => {
+        addEntry({
+            id: Math.random().toString(36).substr(2, 9),
+            timestamp: Date.now(),
+            foodName: type === 'Walk' ? '10-min Walk' : type,
+            sugarGrams: 0,
+            calories: 0,
+            category: 'exercise', // Lowercase to match backend logic
+            method: 'Auto-Log'
+        });
+        setTimerActive(false);
+        setTimeLeft(600);
+    };
+
+    const handleRecommendationClick = (rec) => {
+        if (rec.type === 'activity') {
+            setTimerActive(true);
+        } else {
+            // Immediate action for Water/Protein
+            completeAction(rec.action);
+        }
+    };
 
     useEffect(() => {
         setMounted(true);
@@ -136,14 +172,41 @@ const Dashboard = () => {
                 </BentoItem>
 
                 {/* --- 3. METABOLIC INSIGHT --- */}
-                <BentoItem className="md:col-span-2 p-8 bg-zinc-950/40">
-                    <div className="flex items-start gap-6">
+                <BentoItem className="md:col-span-2 p-8 bg-zinc-950/40 relative overflow-hidden">
+                    <div className="flex items-start gap-6 z-10 relative">
                         <div className="p-4 bg-emerald-500/10 rounded-2xl">
                             <Wind className="w-6 h-6 text-emerald-400" />
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-2 flex-1">
                             <h3 className="text-lg font-black text-white leading-tight">{insight.text}</h3>
                             <p className="text-sm text-zinc-500 font-medium leading-relaxed">{insight.why}</p>
+
+                            {/* Corrective Action Suggestion */}
+                            {insight.recommendation && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="mt-4 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-between"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400">
+                                            {insight.recommendation.icon === 'Walk' && <Activity className="w-5 h-5" />}
+                                            {insight.recommendation.icon === 'Droplet' && <Droplet className="w-5 h-5" />}
+                                            {insight.recommendation.icon === 'Cookie' && <Cookie className="w-5 h-5" />}
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-blue-400 font-black uppercase tracking-wider">Recommended Action</p>
+                                            <p className="text-white font-bold">{insight.recommendation.action}</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => handleRecommendationClick(insight.recommendation)}
+                                        className="px-4 py-2 bg-blue-500 text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition-colors"
+                                    >
+                                        Do it
+                                    </button>
+                                </motion.div>
+                            )}
                         </div>
                     </div>
                 </BentoItem>
@@ -202,7 +265,7 @@ const Dashboard = () => {
                             <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-tight mt-1">Yearly Frequency Analysis</p>
                         </div>
                         <div className="w-full overflow-x-auto pb-2">
-                            <SugarHeatmap userId={profile.anonymousID} />
+                            <SugarHeatmap userId={profile.mongoId} />
                         </div>
                     </div>
                 </BentoItem>
@@ -210,6 +273,39 @@ const Dashboard = () => {
 
             <SugarEntry />
             <GlobalPulse />
+
+            {/* Timer Overlay */}
+            <AnimatePresence>
+                {timerActive && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center"
+                    >
+                        <div className="absolute top-10 right-10">
+                            <button onClick={() => setTimerActive(false)} className="p-4 bg-white/10 rounded-full hover:bg-white/20 transition-all">
+                                <X className="w-6 h-6 text-white" />
+                            </button>
+                        </div>
+
+                        <Trophy className="w-20 h-20 text-yellow-400 mb-8 animate-bounce" />
+                        <h2 className="text-4xl md:text-6xl font-black text-white mb-4 uppercase tracking-tighter">Crushing the Spike</h2>
+                        <p className="text-zinc-400 font-medium mb-12 text-lg">Walk it off! Keep moving.</p>
+
+                        <div className="text-8xl md:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-zinc-600 tabular-nums tracking-tighter mb-12">
+                            {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
+                        </div>
+
+                        <button
+                            onClick={() => completeAction('Walk')}
+                            className="px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xl rounded-full transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(16,185,129,0.3)]"
+                        >
+                            I'm Done! (Claim XP)
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

@@ -53,7 +53,7 @@ const RulerInput = ({ min, max, value, onChange, label, unit }) => {
 
 export const Onboarding = () => {
     const [step, setStep] = useState(0);
-    const { profile, setProfile, login } = useStore();
+    const { profile, setProfile, login, register } = useStore();
     const [usernameInput, setUsernameInput] = useState('');
     const [isChecking, setIsChecking] = useState(false);
     const [error, setError] = useState('');
@@ -190,12 +190,20 @@ export const Onboarding = () => {
         }
     ];
 
-    const next = () => {
+    const next = async () => {
         if (step < steps.length - 1) {
             setStep(s => s + 1);
         } else {
-            setProfile({ onboarded: true });
+            // Final Step: Register User
+            const success = await login_or_register(); // Wait for register
+            if (success) {
+                // Success handled by store update (onboarded: true)
+            }
         }
+    };
+
+    const login_or_register = async () => {
+        return await register();
     };
 
     const progress = ((step + 1) / steps.length) * 100;
