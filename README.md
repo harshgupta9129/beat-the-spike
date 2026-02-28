@@ -1,6 +1,6 @@
 # ⚡ Beat The Spike - Master Your Metabolic Health
 
-![Project Banner](https://raw.githubusercontent.com/harshgupta9129/spring/main/banner.jpg)
+![Project Banner](https://raw.githubusercontent.com/harshgupta9129/beat-the-spike/main/banner.jpg)
 
 > **"What gets measured, gets managed."** 
 > Beat The Spike is a gamified metabolic health tracker that helps users visualize their glucose spikes, understand their body's response to food, and take corrective actions in real-time.
@@ -23,8 +23,8 @@
 
 1.  **Clone the repository**
     ```bash
-    git clone https://github.com/ArunIsharwal/Mcode.git
-    cd Mcode
+    git clone https://github.com/harshgupta9129/beat-the-spike.git
+    cd beat-the-spike
     ```
 
 2.  **Setup Backend**
@@ -32,7 +32,7 @@
     cd backend
     npm install
     # Create a .env file with:
-    # MONGODB_URI=mongodb+srv://rockstar221405_db_user:1S2bTC2jBVuwcywg@cluster0.wwjfoeq.mongodb.net/sugar?appName=Cluster0
+    # MONGODB_URI=Mongodburl
     # PORT=5000
     npm run start
     ```
